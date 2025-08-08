@@ -7987,7 +7987,7 @@
     </div>
   </body>
 
-  <script>
+  <!-- <script>
     // Complete Variant Selection and Redirect Handler - Rewritten
     document.addEventListener("DOMContentLoaded", function () {
       console.log("Variant handler loaded");
@@ -8120,6 +8120,316 @@
 
         // Update color display
         updateColorDisplay(colorName);
+
+        console.log("Form state synced to:", colorName);
+      }
+
+      // Initialize on page load - determine what should be selected
+      function initializeSelection() {
+        console.log("Initializing selection...");
+
+        // Get the initial state
+        const current = getCurrentSelection();
+        console.log("Current selection on load:", current);
+
+        // Sync everything to match the current selection
+        syncFormState(current.colorName, current.variantId);
+      }
+
+      // Handle variant radio button changes
+      variantRadios.forEach((radio) => {
+        radio.addEventListener("change", function () {
+          if (this.checked) {
+            const colorName = this.value;
+            const variantId = colorToIdMap[colorName];
+            console.log("Radio changed to:", colorName, "ID:", variantId);
+
+            syncFormState(colorName, variantId);
+          }
+        });
+      });
+
+      // Handle form submission with proper variant detection
+      productForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        console.log("Form submitted");
+
+        // Get the current selection at submit time
+        const current = getCurrentSelection();
+        console.log("Submitting with selection:", current);
+
+        // Ensure form state is synced
+        syncFormState(current.colorName, current.variantId);
+
+        // Get redirect URL
+        const redirectUrl = variantUrls[current.variantId];
+        console.log("Redirecting to:", redirectUrl);
+
+        if (redirectUrl) {
+          // Optional: Add to cart before redirect
+          /*
+            const formData = new FormData(this);
+            fetch('/cart/add.js', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Added to cart:', data);
+                window.location.href = redirectUrl;
+            })
+            .catch(error => {
+                console.error('Cart error:', error);
+                window.location.href = redirectUrl;
+            });
+            */
+
+          // Direct redirect
+          window.location.href = redirectUrl;
+        } else {
+          console.error("No URL for variant:", current.variantId);
+          // Fallback to normal form submission
+          this.submit();
+        }
+      });
+
+      // Handle noscript select dropdown
+      const noScriptSelect = document.getElementById(
+        "select-template--19563585143038__main-product-form-8306052202750-template--19563585143038__main-id"
+      );
+      if (noScriptSelect) {
+        noScriptSelect.addEventListener("change", function () {
+          const variantId = this.value;
+          const colorName = idToColorMap[variantId] || "Black";
+          console.log("Select dropdown changed to:", colorName);
+
+          syncFormState(colorName, variantId);
+        });
+      }
+
+      // Initialize the form state
+      // Use a small delay to ensure all elements are fully loaded
+      setTimeout(initializeSelection, 100);
+
+      // Also listen for any external changes to radio buttons
+      document.addEventListener("change", function (e) {
+        if (e.target.matches('input[name="option1"]') && e.target.checked) {
+          const colorName = e.target.value;
+          const variantId = colorToIdMap[colorName];
+          console.log("External radio change detected:", colorName);
+
+          syncFormState(colorName, variantId);
+        }
+      });
+
+      console.log("Variant handler setup complete");
+    });
+  </script> -->
+
+  <script>
+    // Complete Variant Selection and Redirect Handler with Image Switching
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("Variant handler loaded");
+
+      // Define the URLs for each variant
+      const variantUrls = {
+        44826467041534: "/collections/black-psoas-tools", // Black variant
+        44826467107070: "/collections/aqua-blue-psoas-tools", // Aqua Blue variant
+        44826467074302: "/collections/deep-blue-psoas-tools", // Deep Blue variant
+      };
+
+      // Variant ID mapping
+      const colorToIdMap = {
+        Black: "44826467041534",
+        "Aqua Blue": "44826467107070",
+        "Deep Blue": "44826467074302",
+      };
+
+      // Reverse mapping for ID to color
+      const idToColorMap = {
+        44826467041534: "Black",
+        44826467107070: "Aqua Blue",
+        44826467074302: "Deep Blue",
+      };
+
+      // Image mapping for each color variant
+      const colorToImageMap = {
+        Black: {
+          src: "//capabodytherapy.com/cdn/shop/files/Psoas_Black01.png?v=1753908593&width=700",
+          srcset: `//capabodytherapy.com/cdn/shop/files/Psoas_Black01.png?v=1753908593&width=200 200w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_Black01.png?v=1753908593&width=300 300w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_Black01.png?v=1753908593&width=400 400w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_Black01.png?v=1753908593&width=500 500w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_Black01.png?v=1753908593&width=600 600w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_Black01.png?v=1753908593&width=700 700w`,
+        },
+        "Aqua Blue": {
+          src: "//capabodytherapy.com/cdn/shop/files/Psoas_AquaBlue01.png?v=1753908593&width=700",
+          srcset: `//capabodytherapy.com/cdn/shop/files/Psoas_AquaBlue01.png?v=1753908593&width=200 200w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_AquaBlue01.png?v=1753908593&width=300 300w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_AquaBlue01.png?v=1753908593&width=400 400w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_AquaBlue01.png?v=1753908593&width=500 500w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_AquaBlue01.png?v=1753908593&width=600 600w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_AquaBlue01.png?v=1753908593&width=700 700w`,
+        },
+        "Deep Blue": {
+          src: "//capabodytherapy.com/cdn/shop/files/Psoas_DeepBlue01.png?v=1753908593&width=700",
+          srcset: `//capabodytherapy.com/cdn/shop/files/Psoas_DeepBlue01.png?v=1753908593&width=200 200w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_DeepBlue01.png?v=1753908593&width=300 300w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_DeepBlue01.png?v=1753908593&width=400 400w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_DeepBlue01.png?v=1753908593&width=500 500w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_DeepBlue01.png?v=1753908593&width=600 600w,
+                     //capabodytherapy.com/cdn/shop/files/Psoas_DeepBlue01.png?v=1753908593&width=700 700w`,
+        },
+      };
+
+      // Get form elements
+      const productForm = document.getElementById(
+        "product-form-8306052202750-template--19563585143038__main"
+      );
+      const hiddenIdInput = productForm.querySelector('input[name="id"]');
+      const variantRadios = productForm.querySelectorAll(
+        'input[type="radio"][name="option1"]'
+      );
+
+      console.log("Found elements:", {
+        form: !!productForm,
+        hiddenInput: !!hiddenIdInput,
+        radios: variantRadios.length,
+      });
+
+      // Function to update the main product image
+      function updateProductImage(colorName) {
+        console.log("Updating product image for color:", colorName);
+
+        // Find the main product image
+        const mainImageContainer = document.querySelector(
+          ".product-gallery__media.is-selected"
+        );
+        if (!mainImageContainer) {
+          console.warn("Main image container not found");
+          return false;
+        }
+
+        const mainImage = mainImageContainer.querySelector("img");
+        if (!mainImage) {
+          console.warn("Main image element not found");
+          return false;
+        }
+
+        const imageData = colorToImageMap[colorName];
+        if (!imageData) {
+          console.warn("No image data found for color:", colorName);
+          return false;
+        }
+
+        // Update the image source and srcset
+        mainImage.src = imageData.src;
+        mainImage.srcset = imageData.srcset.replace(/\s+/g, " ").trim();
+
+        // Update alt text to include color
+        const baseAlt = mainImage.alt.replace(/ - \w+( \w+)?$/, ""); // Remove existing color suffix
+        mainImage.alt = `${baseAlt} - ${colorName}`;
+
+        console.log("Updated main product image to:", colorName);
+        return true;
+      }
+
+      // Function to update the color display text
+      function updateColorDisplay(colorName) {
+        console.log("Updating color display to:", colorName);
+
+        // Try multiple methods to find and update the color display
+        let updated = false;
+
+        // Method 1: Direct variant-option-value element
+        const variantOptionValue = document.querySelector(
+          "variant-option-value"
+        );
+        if (variantOptionValue) {
+          variantOptionValue.textContent = colorName;
+          updated = true;
+          console.log("Updated via variant-option-value element");
+        }
+
+        // Method 2: Look in the variant picker option info section
+        if (!updated) {
+          const optionInfo = document.querySelector(
+            ".variant-picker__option-info"
+          );
+          if (optionInfo) {
+            const textElements = optionInfo.querySelectorAll("*");
+            textElements.forEach((el) => {
+              if (el.textContent && el.children.length === 0) {
+                const text = el.textContent.trim();
+                if (["Black", "Aqua Blue", "Deep Blue"].includes(text)) {
+                  el.textContent = colorName;
+                  updated = true;
+                  console.log("Updated via option info search");
+                }
+              }
+            });
+          }
+        }
+
+        // Method 3: Brute force search
+        if (!updated) {
+          const allElements = document.querySelectorAll("*");
+          for (let el of allElements) {
+            if (el.textContent && el.children.length === 0) {
+              const text = el.textContent.trim();
+              if (["Black", "Aqua Blue", "Deep Blue"].includes(text)) {
+                el.textContent = colorName;
+                updated = true;
+                console.log("Updated via brute force search");
+                break;
+              }
+            }
+          }
+        }
+
+        return updated;
+      }
+
+      // Function to get currently selected variant info
+      function getCurrentSelection() {
+        // Check which radio button is selected
+        const selectedRadio = productForm.querySelector(
+          'input[name="option1"]:checked'
+        );
+        if (selectedRadio) {
+          const colorName = selectedRadio.value;
+          const variantId = colorToIdMap[colorName];
+          return { colorName, variantId, source: "radio" };
+        }
+
+        // Fallback to hidden input value
+        const currentId = hiddenIdInput.value;
+        const colorName = idToColorMap[currentId] || "Black";
+        return { colorName, variantId: currentId, source: "hidden" };
+      }
+
+      // Function to sync all form elements
+      function syncFormState(colorName, variantId) {
+        console.log("Syncing form state:", { colorName, variantId });
+
+        // Update hidden input
+        hiddenIdInput.value = variantId;
+        hiddenIdInput.disabled = false;
+
+        // Update radio button
+        const targetRadio = productForm.querySelector(
+          `input[name="option1"][value="${colorName}"]`
+        );
+        if (targetRadio && !targetRadio.checked) {
+          targetRadio.checked = true;
+        }
+
+        // Update color display
+        updateColorDisplay(colorName);
+
+        // Update product image
+        updateProductImage(colorName);
 
         console.log("Form state synced to:", colorName);
       }
